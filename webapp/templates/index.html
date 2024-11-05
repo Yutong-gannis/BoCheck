@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BoCheck Web Application</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* General styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        h1, h2 {
+            color: #007bff;
+            font-weight: 600;
+        }
+        #main-title {
+            text-align: center;
+        }
+
+        /* Language toggle button group */
+        .lang-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .language-btn {
+            margin-right: 5px;
+        }
+        
+        /* Drop area styling */
+        .drop-area {
+            border: 2px dashed #007bff;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            background-color: #ffffff;
+            transition: background-color 0.3s, border-color 0.3s;
+            cursor: pointer;
+        }
+        .drop-area:hover {
+            background-color: #f1f1f1;
+        }
+        .drop-area.highlight {
+            border-color: #0056b3;
+            background-color: #e9ecef;
+        }
+        .file-info {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #333333;
+        }
+
+        /* Buttons styling */
+        button[type="submit"] {
+            width: 100%;
+            font-size: 16px;
+            padding: 12px;
+        }
+
+        /* Results section */
+        #result-title {
+            text-align: center;
+            color: #28a745;
+            margin-top: 30px;
+        }
+        .download-btn {
+            display: block;
+            margin: 0 auto;
+            width: 200px;
+            text-align: center;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .drop-area {
+                padding: 20px;
+            }
+            button[type="submit"] {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body class="container mt-5">
+    <h1 id="main-title">BoCheck - Tibetan Spelling Check</h1>
+
+    <!-- Language Toggle Button Group -->
+    <div class="lang-toggle">
+        <span id="toggle-text" class="mr-2">Switch Language: </span>
+        <button class="btn btn-outline-secondary language-btn" onclick="setLanguage('en')">English</button>
+        <button class="btn btn-outline-secondary language-btn" onclick="setLanguage('zh')">中文</button>
+        <button class="btn btn-outline-secondary language-btn" onclick="setLanguage('bo')">བོད་སྐད་</button>
+    </div>
+
+    <form action="/" method="POST" enctype="multipart/form-data" id="upload-form">
+        <div class="form-group">
+            <label for="text" id="text-label">Enter Text:</label>
+            <textarea class="form-control" id="text" name="text" rows="4" placeholder="Type Tibetan text here... | 在这里输入藏语文本... | བོད་སྐད་ཀྱི་ཚིག་ལེའུ་བཀག་བཏང་..."></textarea>
+        </div>
+
+        <!-- Drag and Drop Area -->
+        <div class="drop-area" id="drop-area">
+            <p>Drag & drop your .txt or .docx file here, or click to select a file.<br>
+                拖放你的.txt或.docx文件到这里，或点击选择一个文件<br>
+                ནར་འགྱངས་གཏོང་ཁྱོད་.txtའམ་.docxཡིག་ཆ་འདིར་འམ་དེ་མཚུངས་ཀྱི་བསལ་འདེམས་ཀྱི་ཡིག་ཆ།</p>
+            <input type="file" class="form-control-file" id="file" name="file" hidden>
+            <div class="file-info" id="file-info"></div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="submit-btn">Process</button>
+    </form>
+    
+    {% if table %}
+        <h2 id="result-title">Processing Result: / 处理结果: / བཀག་བཏང་འཚོལ་བ:</h2>
+        <div>{{ table | safe }}</div>
+        <a href="{{ url_for('download_file', filename=csv_file) }}" class="btn btn-success mt-3 download-btn">Download</a>
+    {% endif %}
+
+    <script>
+        let currentLanguage = 'en'; // Default language
+
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            updateText(lang);
+        }
+
+        function updateText(lang) {
+            if (lang === 'en') {
+                document.getElementById('main-title').innerText = 'BoCheck - Tibetan Spelling Check';
+                document.getElementById('text-label').innerText = 'Enter Text:';
+                document.getElementById('submit-btn').innerText = 'Process';
+                document.getElementById('result-title').innerText = 'Processing Result:';
+                document.getElementById('toggle-text').innerText = 'Switch Language:';
+            } else if (lang === 'zh') {
+                document.getElementById('main-title').innerText = 'BoCheck - 藏文拼写检查';
+                document.getElementById('text-label').innerText = '输入文本:';
+                document.getElementById('submit-btn').innerText = '处理';
+                document.getElementById('result-title').innerText = '处理结果:';
+                document.getElementById('toggle-text').innerText = '切换语言:';
+            } else {
+                document.getElementById('main-title').innerText = 'BoCheck - བོད་ཡིག་ཚེག་རྡར་བྱས་ནས་འབྲི་བ་ལ་ཞིབ་བཤེར།';
+                document.getElementById('text-label').innerText = 'ཚིག་ལེའུ་བཀག་བཏང་:';
+                document.getElementById('submit-btn').innerText = 'བཀག་བཏང་';
+                document.getElementById('result-title').innerText = 'བཀག་བཏང་འཚོལ་བ:';
+                document.getElementById('toggle-text').innerText = 'སྐད་རྒྱུན་བརྗེཝ།';
+            }
+        }
+
+        // Drag and Drop Functionality
+        let dropArea = document.getElementById('drop-area');
+        let fileInput = document.getElementById('file');
+        let fileInfo = document.getElementById('file-info');
+
+        dropArea.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropArea.classList.add('highlight');
+        });
+
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.classList.remove('highlight');
+        });
+
+        dropArea.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dropArea.classList.remove('highlight');
+            let files = event.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                updateFileInfo(files[0]);
+            }
+        });
+
+        dropArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                updateFileInfo(fileInput.files[0]);
+            }
+        });
+
+        function updateFileInfo(file) {
+            let icon;
+            if (file.name.endsWith('.txt')) {
+                icon = 'data:image/png;base64,...'; // Text file icon
+            } else if (file.name.endsWith('.docx')) {
+                icon = 'data:image/png;base64,...'; // Word file icon
+            } else {
+                icon = 'data:image/png;base64,...'; // Default icon
+            }
+            fileInfo.innerHTML = `<img src="${icon}" width="20" height="20"> ${file.name}`;
+        }
+    </script>
+</body>
+</html>
