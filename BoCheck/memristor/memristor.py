@@ -23,7 +23,7 @@ class memristor:
         self.r = 100  # Default resistance value
         self.x = 1    # Default memristor state value
 
-    def dx(self, v):
+    def dx(self, v): # dw(t)/dt
         """
         Calculates the rate of change of the memristor state based on the input voltage.
 
@@ -137,80 +137,76 @@ class memristor:
     # def apply_voltage(self, voltage, array):
     #     #voltage是输入的电压序列，array是要进行读取的交叉阵列
 
-import numpy as np
 
 class Flux_Controlled_Memristor:
     """
-    A class to simulate a third-order magnetic flux-controlled memristor with customizable parameters
-    and a crossbar array structure.
+    A class to simulate a memristor with customizable parameters and a crossbar array structure.
     """
-
     def __init__(self):
         """
         Initializes the memristor with default parameter values.
         """
-        # Initialize parameters for third-order nonlinear model
-        self.alpha_pos = 3  # Third-order nonlinearity for positive voltage
-        self.alpha_neg = 3  # Third-order nonlinearity for negative voltage
-        self.v_pos = 0.5
-        self.v_neg = -0.5
-        self.Ron = 100
-        self.Roff = 2500
-        self.Kpos = 80
-        self.Kneg = -120
-        self.x_off = 0
-        self.x_on = 1
+        self.phi_off = 0
+        self.phi_on = 1
+        self.phi_pos = 0.5
+        self.phi_neg = -0.5
         self.r = 100  # Default resistance value
-        self.x = 1    # Default memristor state value
+        self.phi = 0  # Default memristor state value
+        #self.alpha = 1 / 10000
+        #self.beta = 1 / (10*10000* 2*10e-7 *10000) / 2
+        #self.gamma = 1 / (100 * 10000**2 * (2*10e-7)**2 * 10000**2)
+        #self.alpha = 1
+        #self.beta = 0.5
+        #self.gamma = 0.3333
+        self.alpha = 100
+        self.beta = 0.5
+        self.gamma = 2631.14
 
-    def dx(self, v):
+    def d_phi(self, v): # dw(t)/dt
         """
-        Calculates the rate of change of the memristor state based on the input voltage,
-        following a cubic nonlinear relationship for a third-order flux-controlled memristor.
+        Calculates the rate of change of the memristor state based on the input voltage.
 
         Parameters:
         v (float): Input voltage applied to the memristor.
 
         Returns:
-        dx (float): Rate of change of the state variable.
+        d_phi (float): Rate of change of the state variable.
         """
-        if v > self.v_pos:
-            dx = self.Kpos * (v / self.v_pos - 1) ** self.alpha_pos
-        elif self.v_neg <= v <= self.v_pos:
-            dx = 0
-        else:
-            dx = self.Kneg * (v / self.v_neg - 1) ** self.alpha_neg
-        return dx
+        d_phi = v
+        return d_phi
 
     def R(self):
         """
-        Calculates the current resistance of the memristor based on its state variable,
-        applying a third-order nonlinear relationship between charge and magnetic flux.
+        Calculates the current resistance of the memristor based on its state variable.
 
         Returns:
         R (float): Current resistance of the memristor.
         """
-        # Implement cubic nonlinearity based on state variable
-        R = self.Ron + (self.Roff - self.Ron) * (1 - self.x ** 3)
+        R = self.alpha + 2*self.beta*self.phi + 3*self.gamma*self.phi**2
         return R
 
-    def update_x(self, dt, dx):
+    def update_phi(self, dt, d_phi):
         """
         Updates the state variable of the memristor over a given time step.
 
         Parameters:
         dt (float): Time step for updating the state.
-        dx (float): Rate of change of the state variable.
+        d_phi (float): Rate of change of the state variable.
 
         Returns:
-        x (float): Updated state of the memristor.
+        phi (float): Updated state of the memristor.
         """
-        self.x = self.x + dt * dx
-        if self.x > self.x_on:
-            self.x = self.x_on
-        elif self.x < self.x_off:
-            self.x = self.x_off
-        return self.x
+        if d_phi > self.phi_pos or d_phi < self.phi_neg:
+            self.phi = self.phi + dt * d_phi
+        else:
+            self.phi = self.phi
+        #self.phi = self.phi + dt * d_phi
+        #if self.phi > self.phi_on:
+        #    self.phi = self.phi_on
+        #elif self.phi < self.phi_off:
+        #    self.phi = self.phi_off
+        phi = self.phi
+        return phi
 
     def crossbar(self):
         """
